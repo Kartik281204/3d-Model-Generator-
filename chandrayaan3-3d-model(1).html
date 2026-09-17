@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chandrayaan-3 — 3D Model</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --bg:#05070d;
+    --panel-bg: rgba(15,18,28,0.72);
+    --panel-border: rgba(255,255,255,0.10);
+    --text:#e8ecf5;
+    --text-dim:#9aa3b8;
+    --accent:#e0a83c;
+    --accent2:#5fb4ff;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#0b0e17;
+      --text:#e8ecf5;
+      --text-dim:#9aa3b8;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#05070d;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;
+  }
+  #scene-container{
+    position:fixed; inset:0;
+  }
+  canvas{ display:block; touch-action:none; }
+
+  .hud{
+    position:fixed;
+    z-index:10;
+    pointer-events:none;
+  }
+  .title-card{
+    top:18px; left:18px;
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    backdrop-filter: blur(10px);
+    border-radius:14px;
+    padding:14px 18px;
+    max-width:min(360px, 80vw);
+    pointer-events:auto;
+  }
+  .title-card h1{
+    margin:0 0 4px 0;
+    font-size:16px;
+    letter-spacing:0.02em;
+    font-weight:700;
+  }
+  .title-card p{
+    margin:0;
+    font-size:12.5px;
+    line-height:1.45;
+    color:var(--text-dim);
+  }
+
+  .controls-card{
+    bottom:18px; left:18px;
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    backdrop-filter: blur(10px);
+    border-radius:14px;
+    padding:10px 12px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    max-width:min(420px,90vw);
+    pointer-events:auto;
+  }
+  button{
+    font-family:inherit;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--text);
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:8px 12px;
+    cursor:pointer;
+    transition:background .15s ease, transform .1s ease;
+    white-space:nowrap;
+  }
+  button:hover{ background:rgba(255,255,255,0.13); }
+  button:active{ transform:scale(0.96); }
+  button.active{
+    background:var(--accent);
+    color:#1a1200;
+    border-color:var(--accent);
+  }
+
+  .legend{
+    top:18px; right:18px;
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    backdrop-filter: blur(10px);
+    border-radius:14px;
+    padding:12px 16px;
+    pointer-events:auto;
+    font-size:12px;
+    max-width:220px;
+  }
+  .legend h2{
+    margin:0 0 8px 0;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--text-dim);
+  }
+  .legend .row{
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:6px;
+    color:var(--text);
+    cursor:pointer;
+  }
+  .legend .swatch{
+    width:10px; height:10px; border-radius:3px; flex:0 0 auto;
+  }
+
+  .hint{
+    bottom:18px; right:18px;
+    font-size:11px;
+    color:var(--text-dim);
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:8px 12px;
+    pointer-events:none;
+  }
+
+  .callout{
+    position:fixed;
+    z-index:20;
+    background:rgba(20,22,32,0.92);
+    border:1px solid var(--accent);
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:12px;
+    color:var(--text);
+    max-width:220px;
+    display:none;
+    pointer-events:none;
+    transform:translate(-50%,-130%);
+  }
+  .callout strong{ color:var(--accent); display:block; margin-bottom:2px; font-size:12.5px;}
+
+  #loading{
+    position:fixed; inset:0; z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg);
+    color:var(--text-dim);
+    font-size:13px;
+    letter-spacing:0.05em;
+  }
+</style>
+</head>
+<body>
+
+<div id="loading">Assembling spacecraft…</div>
+<div id="scene-container"></div>
+
+<div class="hud title-card">
+  <h1>🛰️ Chandrayaan-3</h1>
+  <p>Vikram lander &amp; Pragyan rover — stylized 3D model. Drag to rotate, scroll/pinch to zoom. Click a labeled part or use the legend to learn more.</p>
+</div>
+
+<div class="hud legend" id="legend">
+  <h2>Parts</h2>
+  <div class="row" data-part="lander"><span class="swatch" style="background:#d8b04a"></span>Lander body</div>
+  <div class="row" data-part="legs"><span class="swatch" style="background:#c9c9c9"></span>Landing legs</div>
+  <div class="row" data-part="antenna"><span class="swatch" style="background:#e8e8e8"></span>Antenna</div>
+  <div class="row" data-part="panel"><span class="swatch" style="background:#2d5fa8"></span>Solar panel</div>
+  <div class="row" data-part="ramp"><span class="swatch" style="background:#9a9a9a"></span>Ramp</div>
+  <div class="row" data-part="rover"><span class="swatch" style="background:#c8973b"></span>Pragyan rover</div>
+</div>
+
+<div class="hud controls-card">
+  <button id="btn-rotate" class="active">Auto-rotate: On</button>
+  <button id="btn-reset">Reset view</button>
+  <button id="btn-wire">Wireframe: Off</button>
+  <button id="btn-land">Landing sequence</button>
+</div>
+
+<div class="hud hint">Drag = rotate · Scroll = zoom</div>
+<div class="callout" id="callout"><strong id="callout-title"></strong><span id="callout-body"></span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var loadingEl = document.getElementById('loading');
+
+  var container = document.getElementById('scene-container');
+  var scene = new THREE.Scene();
+
+  var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 2000);
+  var defaultCamPos = new THREE.Vector3(9, 6.5, 11);
+  camera.position.copy(defaultCamPos);
+
+  var renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  // ---------- Lighting ----------
+  scene.add(new THREE.AmbientLight(0x30354a, 1.1));
+  var sun = new THREE.DirectionalLight(0xfff2d8, 1.6);
+  sun.position.set(-15, 20, 8);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.camera.left = -20; sun.shadow.camera.right = 20;
+  sun.shadow.camera.top = 20; sun.shadow.camera.bottom = -20;
+  scene.add(sun);
+  var fill = new THREE.PointLight(0x6f8fff, 0.5);
+  fill.position.set(10,4,-10);
+  scene.add(fill);
+
+  // ---------- Starfield ----------
+  (function stars(){
+    var geo = new THREE.BufferGeometry();
+    var count = 2200;
+    var positions = new Float32Array(count*3);
+    for(var i=0;i<count;i++){
+      var r = 200 + Math.random()*600;
+      var theta = Math.random()*Math.PI*2;
+      var phi = Math.acos((Math.random()*2)-1);
+      positions[i*3] = r*Math.sin(phi)*Math.cos(theta);
+      positions[i*3+1] = Math.abs(r*Math.cos(phi))*0.6 + 20;
+      positions[i*3+2] = r*Math.sin(phi)*Math.sin(theta);
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+    var mat = new THREE.PointsMaterial({ color:0xffffff, size:1.1, sizeAttenuation:true });
+    scene.add(new THREE.Points(geo, mat));
+  })();
+
+  // ---------- Lunar surface ----------
+  var groundGroup = new THREE.Group();
+  scene.add(groundGroup);
+  (function ground(){
+    var size = 80, segs = 120;
+    var geo = new THREE.PlaneGeometry(size, size, segs, segs);
+    geo.rotateX(-Math.PI/2);
+    var pos = geo.attributes.position;
+    for(var i=0;i<pos.count;i++){
+      var x = pos.getX(i), z = pos.getZ(i);
+      var d = Math.sqrt(x*x+z*z);
+      var bump = (Math.sin(x*0.35)+Math.cos(z*0.31))*0.12
+               + (Math.sin(x*0.9+z*0.4))*0.06;
+      // gentle craters
+      var craters = [[6,4,1.6],[-8,-3,2.2],[3,-9,1.3],[-5,7,1.0],[10,9,1.8]];
+      for(var c=0;c<craters.length;c++){
+        var cx=craters[c][0], cz=craters[c][1], cr=craters[c][2];
+        var dd = Math.sqrt((x-cx)*(x-cx)+(z-cz)*(z-cz));
+        if(dd < cr){
+          bump -= (1 - dd/cr) * 0.55;
+        } else if(dd < cr*1.3){
+          bump += (1 - (dd-cr)/(cr*0.3)) * 0.12;
+        }
+      }
+      pos.setY(i, bump - Math.min(d*0.002,0.4));
+    }
+    geo.computeVertexNormals();
+    var mat = new THREE.MeshStandardMaterial({ color:0x8d857a, roughness:1, metalness:0.0 });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.receiveShadow = true;
+    groundGroup.add(mesh);
+
+    // scattered rocks
+    for(var r=0;r<40;r++){
+      var rg = new THREE.DodecahedronGeometry(0.08+Math.random()*0.18, 0);
+      var rm = new THREE.MeshStandardMaterial({ color:0x6e675d, roughness:1 });
+      var rock = new THREE.Mesh(rg, rm);
+      var ang = Math.random()*Math.PI*2, rad = 3+Math.random()*30;
+      rock.position.set(Math.cos(ang)*rad, 0.05, Math.sin(ang)*rad);
+      rock.rotation.set(Math.random(),Math.random(),Math.random());
+      rock.castShadow = true; rock.receiveShadow = true;
+      groundGroup.add(rock);
+    }
+  })();
+
+  // ---------- Materials ----------
+  var goldFoilMat = new THREE.MeshStandardMaterial({ color:0xd8b04a, metalness:0.65, roughness:0.35 });
+  var darkFoilMat = new THREE.MeshStandardMaterial({ color:0x2b2b2e, metalness:0.5, roughness:0.4 });
+  var legMat = new THREE.MeshStandardMaterial({ color:0xc9c9c9, metalness:0.7, roughness:0.3 });
+  var panelMat = new THREE.MeshStandardMaterial({ color:0x2d5fa8, metalness:0.3, roughness:0.35, emissive:0x0a1a33, emissiveIntensity:0.3 });
+  var whiteMat = new THREE.MeshStandardMaterial({ color:0xe8e8e8, metalness:0.4, roughness:0.4 });
+  var roverMat = new THREE.MeshStandardMaterial({ color:0xc8973b, metalness:0.55, roughness:0.4 });
+  var wheelMat = new THREE.MeshStandardMaterial({ color:0x1c1c1c, metalness:0.2, roughness:0.7 });
+  var rampMat = new THREE.MeshStandardMaterial({ color:0x9a9a9a, metalness:0.4, roughness:0.5 });
+
+  // ---------- Named parts registry (for click / legend) ----------
+  var parts = { lander:[], legs:[], antenna:[], panel:[], ramp:[], rover:[] };
+  function tag(mesh, key){ mesh.userData.part = key; parts[key].push(mesh); mesh.castShadow = true; mesh.receiveShadow = true; return mesh; }
+
+  var info = {
+    lander: {title:"Vikram Lander", body:"Octagonal body housing propulsion, avionics and scientific payloads (ChaSTE, ILSA, RAMBHA, LRA)."},
+    legs: {title:"Landing Legs", body:"Four shock-absorbing legs with footpads, engineered to touch down softly on uneven lunar terrain."},
+    antenna: {title:"Antenna", body:"High-gain and low-gain antennas relay data and commands between the lander and Earth."},
+    panel: {title:"Solar Panels", body:"Photovoltaic panels convert sunlight into electrical power for the lander and rover."},
+    ramp: {title:"Rover Ramp", body:"A fold-out ramp that Pragyan rolled down onto the lunar surface after landing."},
+    rover: {title:"Pragyan Rover", body:"A six-wheeled rover that explored the surface near the landing site, analyzing soil composition."}
+  };
+
+  var landerGroup = new THREE.Group();
+  scene.add(landerGroup);
+
+  // ---- Lander body (octagonal prism) ----
+  (function landerBody(){
+    var bodyGeo = new THREE.CylinderGeometry(1.7, 1.9, 1.5, 8);
+    var body = tag(new THREE.Mesh(bodyGeo, goldFoilMat), 'lander');
+    body.position.y = 1.6;
+    landerGroup.add(body);
+
+    var topGeo = new THREE.CylinderGeometry(1.5, 1.7, 0.35, 8);
+    var top = tag(new THREE.Mesh(topGeo, darkFoilMat), 'lander');
+    top.position.y = 2.5;
+    landerGroup.add(top);
+
+    // deck detail
+    var deckGeo = new THREE.CylinderGeometry(1.55, 1.55, 0.08, 8);
+    var deck = tag(new THREE.Mesh(deckGeo, whiteMat), 'lander');
+    deck.position.y = 2.7;
+    landerGroup.add(deck);
+  })();
+
+  // ---- Legs ----
+  (function legs(){
+    var angles = [Math.PI/4, 3*Math.PI/4, 5*Math.PI/4, 7*Math.PI/4];
+    angles.forEach(function(a){
+      var group = new THREE.Group();
+      var dirX = Math.cos(a), dirZ = Math.sin(a);
+      var topX = dirX*1.1, topZ = dirZ*1.1, topY = 1.9;
+      var botX = dirX*2.6, botZ = dirZ*2.6, botY = 0.15;
+
+      var legLen = Math.sqrt(Math.pow(botX-topX,2)+Math.pow(botY-topY,2)+Math.pow(botZ-topZ,2));
+      var legGeo = new THREE.CylinderGeometry(0.09,0.09, legLen, 8);
+      var leg = tag(new THREE.Mesh(legGeo, legMat), 'legs');
+      leg.position.set((topX+botX)/2, (topY+botY)/2, (topZ+botZ)/2);
+      var dir = new THREE.Vector3(botX-topX, botY-topY, botZ-topZ).normalize();
+      var quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
+      leg.quaternion.copy(quat);
+      group.add(leg);
+
+      var footGeo = new THREE.SphereGeometry(0.28, 12, 8);
+      var foot = tag(new THREE.Mesh(footGeo, legMat), 'legs');
+      foot.position.set(botX, botY, botZ);
+      foot.scale.y = 0.5;
+      group.add(foot);
+
+      // small strut
+      var strutGeo = new THREE.CylinderGeometry(0.05,0.05, legLen*0.55, 6);
+      var strut = tag(new THREE.Mesh(strutGeo, legMat), 'legs');
+      var sTopX = dirX*1.75, sTopZ = dirZ*1.75, sTopY = 1.35;
+      strut.position.set((sTopX+botX)/2*0.9 + dirX*0.3, (sTopY+botY)/2, (sTopZ+botZ)/2*0.9 + dirZ*0.3);
+      var dir2 = new THREE.Vector3(botX - sTopX, botY - sTopY, botZ - sTopZ).normalize();
+      strut.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), dir2));
+      group.add(strut);
+
+      landerGroup.add(group);
+    });
+  })();
+
+  // ---- Antenna ----
+  (function antenna(){
+    var maskGroup = new THREE.Group();
+    var poleGeo = new THREE.CylinderGeometry(0.04,0.04,1.1,8);
+    var pole = tag(new THREE.Mesh(poleGeo, whiteMat), 'antenna');
+    pole.position.set(-0.9, 3.25, 0.3);
+    landerGroup.add(pole);
+
+    var dishGeo = new THREE.SphereGeometry(0.32, 16, 12, 0, Math.PI*2, 0, Math.PI/2.1);
+    var dish = tag(new THREE.Mesh(dishGeo, whiteMat), 'antenna');
+    dish.position.set(-0.9, 3.8, 0.3);
+    dish.rotation.x = Math.PI * 1.05;
+    landerGroup.add(dish);
+
+    // low gain antenna
+    var lgGeo = new THREE.CylinderGeometry(0.02,0.06,0.5,8);
+    var lg = tag(new THREE.Mesh(lgGeo, whiteMat), 'antenna');
+    lg.position.set(0.9, 3.05, -0.6);
+    landerGroup.add(lg);
+  })();
+
+  // ---- Solar panel ----
+  (function panel(){
+    var panelGeo = new THREE.BoxGeometry(1.9, 0.05, 1.3);
+    var panel = tag(new THREE.Mesh(panelGeo, panelMat), 'panel');
+    panel.position.set(0.6, 2.85, -1.5);
+    panel.rotation.x = -0.55;
+    landerGroup.add(panel);
+
+    // grid lines using edges
+    var edges = new THREE.LineSegments(new THREE.EdgesGeometry(panelGeo), new THREE.LineBasicMaterial({color:0x0a1a33}));
+    edges.position.copy(panel.position);
+    edges.rotation.copy(panel.rotation);
+    landerGroup.add(edges);
+
+    var hingeGeo = new THREE.CylinderGeometry(0.06,0.06,1.9,8);
+    var hinge = tag(new THREE.Mesh(hingeGeo, legMat), 'panel');
+    hinge.rotation.z = Math.PI/2;
+    hinge.position.set(0.6, 2.62, -0.95);
+    landerGroup.add(hinge);
+  })();
+
+  // ---- Ramp ----
+  var rampGroup = new THREE.Group();
+  (function ramp(){
+    var rampGeo = new THREE.BoxGeometry(0.9, 0.06, 2.6);
+    var ramp = tag(new THREE.Mesh(rampGeo, rampMat), 'ramp');
+    ramp.position.set(-1.6, 0.9, 1.8);
+    ramp.rotation.x = -0.55;
+    rampGroup.add(ramp);
+    landerGroup.add(rampGroup);
+  })();
+
+  // ---- Pragyan Rover ----
+  var roverGroup = new THREE.Group();
+  (function rover(){
+    var bodyGeo = new THREE.BoxGeometry(0.75, 0.35, 0.55);
+    var body = tag(new THREE.Mesh(bodyGeo, roverMat), 'rover');
+    body.position.y = 0.32;
+    roverGroup.add(body);
+
+    var panelGeo = new THREE.BoxGeometry(0.7, 0.03, 0.5);
+    var topPanel = tag(new THREE.Mesh(panelGeo, panelMat), 'rover');
+    topPanel.position.y = 0.52;
+    roverGroup.add(topPanel);
+
+    var wheelGeo = new THREE.CylinderGeometry(0.14,0.14,0.08,14);
+    var wheelPositions = [
+      [0.34, 0.14, 0.3],[0, 0.14, 0.3],[-0.34, 0.14, 0.3],
+      [0.34, 0.14, -0.3],[0, 0.14, -0.3],[-0.34, 0.14, -0.3]
+    ];
+    wheelPositions.forEach(function(p){
+      var wheel = tag(new THREE.Mesh(wheelGeo, wheelMat), 'rover');
+      wheel.rotation.z = Math.PI/2;
+      wheel.position.set(p[0],p[1],p[2]);
+      roverGroup.add(wheel);
+    });
+
+    var camGeo = new THREE.BoxGeometry(0.1,0.1,0.1);
+    var camMast = tag(new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.3,6), whiteMat), 'rover');
+    camMast.position.set(0.2,0.65,0);
+    roverGroup.add(camMast);
+    var camHead = tag(new THREE.Mesh(camGeo, whiteMat), 'rover');
+    camHead.position.set(0.2,0.82,0);
+    roverGroup.add(camHead);
+  })();
+  roverGroup.position.set(-3.6, 0.02, 2.9);
+  roverGroup.rotation.y = 0.4;
+  scene.add(roverGroup);
+
+  landerGroup.position.y = 0.02;
+
+  loadingEl.style.display = 'none';
+
+  // ---------- Interaction: drag rotate, scroll zoom ----------
+  var target = new THREE.Vector3(0,1.4,0);
+  var spherical = new THREE.Spherical();
+  spherical.setFromVector3(camera.position.clone().sub(target));
+
+  var isDragging = false, lastX=0, lastY=0;
+  var autoRotate = true;
+  var rotateSpeed = 0.25;
+
+  function updateCamera(){
+    var pos = new THREE.Vector3().setFromSpherical(spherical).add(target);
+    camera.position.copy(pos);
+    camera.lookAt(target);
+  }
+  updateCamera();
+
+  function onDown(x,y){ isDragging = true; lastX = x; lastY = y; }
+  function onMove(x,y){
+    if(!isDragging) return;
+    var dx = x - lastX, dy = y - lastY;
+    lastX = x; lastY = y;
+    spherical.theta -= dx * 0.006;
+    spherical.phi -= dy * 0.006;
+    spherical.phi = Math.max(0.25, Math.min(Math.PI/2 - 0.03, spherical.phi));
+    updateCamera();
+  }
+  function onUp(){ isDragging = false; }
+
+  renderer.domElement.addEventListener('mousedown', function(e){ onDown(e.clientX,e.clientY); });
+  window.addEventListener('mousemove', function(e){ onMove(e.clientX,e.clientY); });
+  window.addEventListener('mouseup', onUp);
+
+  renderer.domElement.addEventListener('touchstart', function(e){
+    if(e.touches.length===1){ onDown(e.touches[0].clientX,e.touches[0].clientY); }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', function(e){
+    if(e.touches.length===1){ onMove(e.touches[0].clientX,e.touches[0].clientY); }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchend', onUp);
+
+  renderer.domElement.addEventListener('wheel', function(e){
+    e.preventDefault();
+    spherical.radius += e.deltaY * 0.01;
+    spherical.radius = Math.max(4, Math.min(40, spherical.radius));
+    updateCamera();
+  }, {passive:false});
+
+  // pinch zoom
+  var lastPinchDist = null;
+  renderer.domElement.addEventListener('touchmove', function(e){
+    if(e.touches.length===2){
+      var dx = e.touches[0].clientX - e.touches[1].clientX;
+      var dy = e.touches[0].clientY - e.touches[1].clientY;
+      var dist = Math.sqrt(dx*dx+dy*dy);
+      if(lastPinchDist!=null){
+        spherical.radius += (lastPinchDist - dist) * 0.02;
+        spherical.radius = Math.max(4, Math.min(40, spherical.radius));
+        updateCamera();
+      }
+      lastPinchDist = dist;
+    }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchend', function(){ lastPinchDist=null; });
+
+  // ---------- Raycaster for clicks / labels ----------
+  var raycaster = new THREE.Raycaster();
+  var mouse = new THREE.Vector2();
+  var callout = document.getElementById('callout');
+  var calloutTitle = document.getElementById('callout-title');
+  var calloutBody = document.getElementById('callout-body');
+  var calloutTimeout = null;
+
+  function showCallout(key, clientX, clientY){
+    var d = info[key];
+    if(!d) return;
+    calloutTitle.textContent = d.title;
+    calloutBody.textContent = d.body;
+    callout.style.left = clientX + 'px';
+    callout.style.top = clientY + 'px';
+    callout.style.display = 'block';
+    clearTimeout(calloutTimeout);
+    calloutTimeout = setTimeout(function(){ callout.style.display='none'; }, 3200);
+  }
+
+  renderer.domElement.addEventListener('click', function(e){
+    mouse.x = (e.clientX/window.innerWidth)*2-1;
+    mouse.y = -(e.clientY/window.innerHeight)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    var all = [];
+    Object.keys(parts).forEach(function(k){ all = all.concat(parts[k]); });
+    var hits = raycaster.intersectObjects(all);
+    if(hits.length){
+      var key = hits[0].object.userData.part;
+      showCallout(key, e.clientX, e.clientY);
+    }
+  });
+
+  document.querySelectorAll('.legend .row').forEach(function(row){
+    row.addEventListener('click', function(){
+      var key = row.getAttribute('data-part');
+      var rect = row.getBoundingClientRect();
+      showCallout(key, rect.left, rect.top);
+    });
+  });
+
+  // ---------- Buttons ----------
+  var btnRotate = document.getElementById('btn-rotate');
+  btnRotate.addEventListener('click', function(){
+    autoRotate = !autoRotate;
+    btnRotate.textContent = 'Auto-rotate: ' + (autoRotate?'On':'Off');
+    btnRotate.classList.toggle('active', autoRotate);
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', function(){
+    spherical.setFromVector3(defaultCamPos.clone().sub(target));
+    updateCamera();
+  });
+
+  var wireOn = false;
+  document.getElementById('btn-wire').addEventListener('click', function(e){
+    wireOn = !wireOn;
+    e.target.textContent = 'Wireframe: ' + (wireOn?'On':'Off');
+    e.target.classList.toggle('active', wireOn);
+    scene.traverse(function(obj){
+      if(obj.isMesh && obj.material && 'wireframe' in obj.material){
+        obj.material.wireframe = wireOn;
+      }
+    });
+  });
+
+  var landing = false, landingT = 0;
+  document.getElementById('btn-land').addEventListener('click', function(){
+    landing = true; landingT = 0;
+    landerGroup.position.y = 6;
+  });
+
+  // ---------- Resize ----------
+  window.addEventListener('resize', function(){
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // ---------- Animate ----------
+  var clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    var dt = clock.getDelta();
+
+    if(autoRotate && !isDragging){
+      spherical.theta += rotateSpeed * dt * 0.5;
+      updateCamera();
+    }
+
+    if(landing){
+      landingT += dt;
+      var y = 6 * Math.max(0, 1 - landingT*0.6);
+      landerGroup.position.y = 0.02 + y;
+      if(landingT > 1.8){ landerGroup.position.y = 0.02; landing = false; }
+    }
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
