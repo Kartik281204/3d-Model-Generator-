@@ -1,0 +1,42 @@
+<svg viewBox="0 0 380 760" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  <defs>
+    <clipPath id="frame-clip"><rect x="0" y="0" width="380" height="760" rx="34"/></clipPath>
+    <linearGradient id="cam-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1f28"/>
+      <stop offset="1" stop-color="#0d1015"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="380" height="760" rx="34" fill="#0a0d12"/>
+  <g clip-path="url(#frame-clip)">
+  <text x="30" y="46" font-size="15.5" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="700" fill="#e7ecf3" text-anchor="start">Step 2 — Capture the object</text>
+  <text x="30" y="68" font-size="11" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="400" fill="#93a0b3" text-anchor="start">14 photos captured. Add more for finer</text>
+  <text x="30" y="82" font-size="11" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="400" fill="#93a0b3" text-anchor="start">detail, or reconstruct now.</text>
+  <circle cx="190.0" cy="128" r="30" fill="none" stroke="#ffffff" stroke-width="6" stroke-opacity="0.1"/>
+  <circle cx="190.0" cy="128" r="30" fill="none" stroke="#2dd4bf" stroke-width="6" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="23.6" transform="rotate(-90 190.0 128)"/>
+  <text x="190.0" y="134" font-size="17" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="700" fill="#e7ecf3" text-anchor="middle">14</text>
+  <rect x="85.0" y="180" width="210" height="210" rx="20" fill="url(#cam-grad)" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
+  <polygon points="152.0,325.0 144.0,293.0 160.0,261.0 186.0,245.0 216.0,253.0 234.0,283.0 230.0,317.0 204.0,335.0 174.0,333.0" fill="#3a4048" opacity="0.9"/>
+  <circle cx="190.0" cy="285.0" r="88.2" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-opacity="0.45" stroke-dasharray="6,6"/>
+  <rect x="95.0" y="410" width="190" height="46" rx="23" fill="#2dd4bf"/>
+  <rect x="142.0" y="428.104" width="20" height="12.095999999999998" rx="2.304" fill="#062521"/>
+  <rect x="147.6" y="425.8" width="6.0" height="3.1679999999999997" rx="0.8639999999999999" fill="#062521"/>
+  <circle cx="152.0" cy="434.728" r="4.319999999999999" fill="#0a0d12"/>
+  <circle cx="152.0" cy="434.728" r="2.448" fill="#062521"/>
+  <circle cx="158.4" cy="430.408" r="0.8639999999999999" fill="#0a0d12"/>
+  <text x="170.0" y="438" font-size="13.5" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="700" fill="#062521" text-anchor="start">Capture Photo</text>
+  <text x="190.0" y="470" font-size="11" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="400" fill="#2dd4bf" text-anchor="middle">or upload existing photos</text>
+  <rect x="32.0" y="492" width="46" height="46" rx="9" fill="#3a2f26" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
+  <rect x="86.0" y="492" width="46" height="46" rx="9" fill="#41352a" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
+  <rect x="140.0" y="492" width="46" height="46" rx="9" fill="#392e28" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
+  <rect x="194.0" y="492" width="46" height="46" rx="9" fill="#463829" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
+  <rect x="248.0" y="492" width="46" height="46" rx="9" fill="#3d3128" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
+  <rect x="248.0" y="492" width="46" height="46" rx="9" fill="none" stroke="#fbbf24" stroke-width="2"/>
+  <polygon points="281.0,516.6 288.98,531.048 273.02,531.048" fill="#fbbf24"/>
+  <rect x="280.25" y="522.648" width="1.5" height="5.208" rx="0.75" fill="#171c25"/>
+  <circle cx="281.0" cy="529.368" r="1.05" fill="#171c25"/>
+  <rect x="302.0" y="492" width="46" height="46" rx="9" fill="#3a2e27" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
+  <rect x="24" y="564" width="332" height="46" rx="23.0" fill="#2dd4bf"/>
+  <text x="190.0" y="591.725" font-size="13.5" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="700" fill="#062521" text-anchor="middle">Reconstruct 3D Model</text>
+  </g>
+  <rect x="1.5" y="1.5" width="377" height="757" rx="33" fill="none" stroke="#000000" stroke-opacity="0.35" stroke-width="3"/>
+</svg>

@@ -1,0 +1,72 @@
+<svg viewBox="0 0 380 760" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  <defs>
+    <clipPath id="frame-clip"><rect x="0" y="0" width="380" height="760" rx="34"/></clipPath>
+    <linearGradient id="cam-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1f28"/>
+      <stop offset="1" stop-color="#0d1015"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="380" height="760" rx="34" fill="#0a0d12"/>
+  <g clip-path="url(#frame-clip)">
+  <rect x="0" y="0" width="380" height="760" rx="0" fill="#05070a"/>
+  <radialGradient id="vign" cx="50%" cy="42%" r="70%"><stop offset="0%" stop-color="#151b22"/><stop offset="100%" stop-color="#05070a"/></radialGradient>
+  <rect x="0" y="0" width="380" height="760" rx="0" fill="url(#vign)"/>
+  <line x1="-8.0" y1="670" x2="166.24" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="14.0" y1="670" x2="168.88" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="36.0" y1="670" x2="171.52" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="58.0" y1="670" x2="174.16" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="80.0" y1="670" x2="176.8" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="102.0" y1="670" x2="179.44" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="124.0" y1="670" x2="182.08" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="146.0" y1="670" x2="184.72" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="168.0" y1="670" x2="187.36" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="190.0" y1="670" x2="190.0" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="212.0" y1="670" x2="192.64" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="234.0" y1="670" x2="195.28" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="256.0" y1="670" x2="197.92" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="278.0" y1="670" x2="200.56" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="300.0" y1="670" x2="203.2" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="322.0" y1="670" x2="205.84" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="344.0" y1="670" x2="208.48" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="366.0" y1="670" x2="211.12" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="388.0" y1="670" x2="213.76" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.18"/>
+  <line x1="40.0" y1="520" x2="340.0" y2="520" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.12"/>
+  <line x1="55.0" y1="542" x2="325.0" y2="542" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.12"/>
+  <line x1="70.0" y1="564" x2="310.0" y2="564" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.12"/>
+  <line x1="85.0" y1="586" x2="295.0" y2="586" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.12"/>
+  <line x1="100.0" y1="608" x2="280.0" y2="608" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.12"/>
+  <line x1="115.0" y1="630" x2="265.0" y2="630" stroke="#2dd4bf" stroke-width="1" stroke-opacity="0.12"/>
+  <polygon points="190.0,286 279.8289897669969,300.0 260.1541393427578,346.8923684882774" fill="#c9a15a" opacity="0.94"/>
+  <polygon points="190.0,286 260.1541393427578,346.8923684882774 219.57812418658426,383.74953740000956" fill="#b98f52" opacity="0.94"/>
+  <polygon points="190.0,286 219.57812418658426,383.74953740000956 163.63965968789006,374.6384825798845" fill="#d8b26a" opacity="0.94"/>
+  <polygon points="190.0,286 163.63965968789006,374.6384825798845 114.23889480015566,350.640171704665" fill="#ad8248" opacity="0.94"/>
+  <polygon points="190.0,286 114.23889480015566,350.640171704665 99.41759949557346,300.0" fill="#c39a5e" opacity="0.94"/>
+  <polygon points="190.0,286 99.41759949557346,300.0 121.19797438813659,254.0114101896618" fill="#9c7640" opacity="0.94"/>
+  <polygon points="190.0,286 121.19797438813659,254.0114101896618 161.22005970054883,218.51049541633319" fill="#e0bd7a" opacity="0.94"/>
+  <polygon points="190.0,286 161.22005970054883,218.51049541633319 216.1659898496249,225.91181470144141" fill="#a8834a" opacity="0.94"/>
+  <polygon points="190.0,286 216.1659898496249,225.91181470144141 264.2723086246594,250.35496840056192" fill="#bd9a5c" opacity="0.94"/>
+  <polygon points="190.0,286 264.2723086246594,250.35496840056192 279.8289897669969,300.0" fill="#93703c" opacity="0.94"/>
+  <polygon points="190.0,286 279.8289897669969,300.0 260.1541393427578,346.8923684882774" fill="#ffffff" opacity="0.05"/>
+  <polygon points="190.0,286 219.57812418658426,383.74953740000956 163.63965968789006,374.6384825798845" fill="#ffffff" opacity="0.05"/>
+  <polygon points="190.0,286 114.23889480015566,350.640171704665 99.41759949557346,300.0" fill="#ffffff" opacity="0.05"/>
+  <polygon points="190.0,286 121.19797438813659,254.0114101896618 161.22005970054883,218.51049541633319" fill="#ffffff" opacity="0.05"/>
+  <polygon points="190.0,286 216.1659898496249,225.91181470144141 264.2723086246594,250.35496840056192" fill="#ffffff" opacity="0.05"/>
+  <rect x="16" y="30" width="210" height="58" rx="14" fill="#12161d" stroke="#ffffff" stroke-width="1" stroke-opacity="0.14"/>
+  <polygon points="34,41.2 42.0,46.304 34,51.056 26.0,46.304" fill="#99f6ec"/>
+  <polygon points="26.0,46.304 34,51.056 34,58.8 26.0,54.048" fill="#0d9488"/>
+  <polygon points="42.0,46.304 34,51.056 34,58.8 42.0,54.048" fill="#2dd4bf"/>
+  <text x="46" y="54" font-size="13.5" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="700" fill="#e7ecf3" text-anchor="start">Your 3D Scan</text>
+  <text x="30" y="72" font-size="10" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="400" fill="#93a0b3" text-anchor="start">Drag to rotate, pinch to zoom.</text>
+  <rect x="16" y="666" width="138" height="34" rx="17" fill="#2dd4bf"/>
+  <text x="85" y="688" font-size="10.8" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="700" fill="#062521" text-anchor="middle">Auto-rotate: On</text>
+  <rect x="162" y="666" width="96" height="34" rx="17" fill="#12161d" stroke="#ffffff" stroke-width="1" stroke-opacity="0.14"/>
+  <text x="210" y="688" font-size="10.8" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="600" fill="#e7ecf3" text-anchor="middle">Reset view</text>
+  <rect x="16" y="708" width="112" height="34" rx="17" fill="#12161d" stroke="#ffffff" stroke-width="1" stroke-opacity="0.14"/>
+  <text x="72" y="730" font-size="10.8" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="600" fill="#e7ecf3" text-anchor="middle">Scan another</text>
+  <rect x="188" y="696" width="176" height="46" rx="23" fill="#2dd4bf"/>
+  <rect x="216.8" y="711.5" width="2.4" height="10.799999999999999" rx="0.8999999999999999" fill="#062521"/>
+  <polygon points="212.9,721.1 223.1,721.1 218,727.4" fill="#062521"/>
+  <text x="232" y="724" font-size="11.6" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-weight="700" fill="#062521" text-anchor="start">Export model (.zip)</text>
+  </g>
+  <rect x="1.5" y="1.5" width="377" height="757" rx="33" fill="none" stroke="#000000" stroke-opacity="0.35" stroke-width="3"/>
+</svg>

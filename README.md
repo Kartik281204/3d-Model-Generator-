@@ -15,8 +15,10 @@ No app install. No LiDAR. No server. One HTML file, a handful of photos, and som
 ## Table of Contents
 
 - [Overview](#overview)
+- [Interface Preview](#interface-preview)
 - [Quick Start](#quick-start)
 - [How It Works](#how-it-works)
+  - [Validation](#validation)
 - [Project Structure](#project-structure)
 - [Tech Stack](#tech-stack)
 - [Deploying to GitHub Pages](#deploying-to-github-pages)
@@ -42,6 +44,27 @@ Point your camera at an object, walk around it (or spin it in place), and this a
 - 🖱️ **Interactive 3D viewer** — drag to orbit, scroll or pinch to zoom, auto-rotate
 - ⬇️ **Real export** — a `.obj` (geometry) and `.ply` (geometry + vertex colors) bundled into a `.zip`, ready for Blender, MeshLab, or any standard 3D tool
 - 🧠 **Self-correcting capture** — each photo is silently graded as it's taken, and flagged if its silhouette looks unreliable
+
+## Interface Preview
+
+<table>
+<tr>
+<td align="center" width="33%">
+<img src="assets/ui-welcome.svg" width="230" alt="Welcome screen: title, three-step overview, and capture tips"><br>
+<sub><b>Guided start</b><br>steps and capture tips up front</sub>
+</td>
+<td align="center" width="33%">
+<img src="assets/ui-capture.svg" width="230" alt="Capture screen: progress ring, live viewfinder, and thumbnail strip"><br>
+<sub><b>Guided capture</b><br>progress ring, live preview, quality flags</sub>
+</td>
+<td align="center" width="33%">
+<img src="assets/ui-result.svg" width="230" alt="Result screen: interactive 3D viewer with export controls"><br>
+<sub><b>Interactive result</b><br>rotate, zoom, and export</sub>
+</td>
+</tr>
+</table>
+
+<sub>These are interface previews recreated from the app's actual layout, copy, and color tokens — not photographs, since the real screens depend on a live camera and a reconstructed model.</sub>
 
 ## Quick Start
 
@@ -69,6 +92,10 @@ Once it's open:
 
 This is **silhouette-based 3D reconstruction** — sometimes called *space carving* or *shape-from-silhouette*. It's a different (and much lighter-weight) technique than LiDAR scanning or full photogrammetry, both of which typically need depth sensors or heavy server-side processing that a single static web page can't do on its own.
 
+<p align="center"><img src="assets/space-carving-concept.png" width="640" alt="Diagram: a coarse 3-photo reconstruction versus a tight 14-photo reconstruction of a circle, both computed by intersecting camera silhouette wedges"></p>
+
+The diagram above isn't just illustrative — the shapes are computed exactly the same way the app does it, clipping a region by every camera's silhouette wedge. Three photos leave a coarse triangular over-approximation; fourteen tighten it into something close to the true circle. This is the same idea in 2D that the app runs as voxel carving in 3D.
+
 ```mermaid
 flowchart LR
     A["📷 Capture photos<br/>16–24 shots, evenly spaced"] --> B["✂️ Extract silhouette<br/>background subtraction, or<br/>corner-color fallback"]
@@ -90,7 +117,19 @@ flowchart LR
 | **Coloring** | For each vertex, the app compares its surface normal against every camera's viewing direction, picks whichever photo was looking most directly at that point, and samples the color straight from that photo's pixels. |
 | **Export** | The final geometry is serialized as both `.obj` (widely compatible) and `.ply` (keeps vertex colors), zipped together with a short README, and downloaded. |
 
-**On accuracy:** during development, the carving math was validated against a synthetic sphere reconstructed from 18 simulated silhouette views — it came back within ~12% of the sphere's true volume, with the tightest accuracy around the equator (matching what you'd expect from a turntable-style capture that never looks straight down or up).
+### Validation
+
+Rather than just asserting the carving math works, it was tested against synthetic ground truth: a sphere of known size, reconstructed from simulated silhouette views using the exact same camera-projection and carving code as the real app. Two things came out of that:
+
+<table>
+<tr>
+<td width="50%"><img src="assets/accuracy-vs-photos.png" width="420" alt="Chart: reconstructed volume ratio converging toward 1.0 as the number of photos increases from 3 to 40"></td>
+<td width="50%"><img src="assets/accuracy-by-latitude.png" width="420" alt="Chart: reconstruction accuracy plotted against latitude, showing a U-shape that is best at the equator and worst at the poles"></td>
+</tr>
+</table>
+
+- **More photos help, up to a point.** Accuracy improves quickly up to around 8–16 photos, then flattens out — evidence behind the app's 16-photo recommendation (going to 40 barely helps more than 24 does).
+- **The equator reconstructs far better than the poles.** This is the geometric root of the "tops and bottoms are softer" limitation below — it isn't a bug, it's an inherent property of any turntable-style capture that never looks straight down or up.
 
 ## Project Structure
 

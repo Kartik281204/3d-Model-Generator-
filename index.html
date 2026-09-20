@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>3D Object Scanner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<style>
+  :root{
+    --bg:#f2f4f6;
+    --bg-elevated:#ffffff;
+    --text:#12161d;
+    --text-dim:#5b6472;
+    --border: rgba(18,22,29,0.12);
+    --accent:#0d9488;
+    --accent-strong:#0f766e;
+    --accent-contrast:#ffffff;
+    --panel-bg: rgba(255,255,255,0.86);
+    --danger:#dc2626;
+    --warn:#b45309;
+    --shadow: 0 8px 30px rgba(15,23,30,0.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0d12;
+      --bg-elevated:#12161d;
+      --text:#e7ecf3;
+      --text-dim:#93a0b3;
+      --border: rgba(255,255,255,0.10);
+      --accent:#2dd4bf;
+      --accent-strong:#5eead4;
+      --accent-contrast:#062521;
+      --panel-bg: rgba(18,22,29,0.80);
+      --danger:#f87171;
+      --warn:#fbbf24;
+      --shadow: 0 8px 30px rgba(0,0,0,0.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0d12;
+    --bg-elevated:#12161d;
+    --text:#e7ecf3;
+    --text-dim:#93a0b3;
+    --border: rgba(255,255,255,0.10);
+    --accent:#2dd4bf;
+    --accent-strong:#5eead4;
+    --accent-contrast:#062521;
+    --panel-bg: rgba(18,22,29,0.80);
+    --danger:#f87171;
+    --warn:#fbbf24;
+    --shadow: 0 8px 30px rgba(0,0,0,0.45);
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; height:100%; width:100%; }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;
+  }
+
+  #app{ position:fixed; inset:0; display:flex; flex-direction:column; }
+  .screen{ display:none; flex:1; min-height:0; flex-direction:column; }
+  .screen.active{ display:flex; }
+
+  .content-scroll{
+    flex:1; min-height:0; overflow-y:auto;
+    padding: max(20px, env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .centered-content{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px; text-align:center; gap:14px;
+  }
+
+  h1{ font-size:22px; margin:6px 0 4px 0; }
+  h2{ font-size:18px; margin:4px 0 6px 0; align-self:flex-start; }
+  .subtitle{ color:var(--text-dim); font-size:14.5px; line-height:1.5; max-width:420px; margin:0 0 18px 0; }
+  .muted{ color:var(--text-dim); font-size:13.5px; line-height:1.45; align-self:flex-start; margin:0 0 16px 0; }
+  .brand-icon{ font-size:40px; }
+
+  .steps-list{ width:100%; max-width:420px; display:flex; flex-direction:column; gap:12px; margin-bottom:18px; }
+  .step{ display:flex; gap:12px; text-align:left; background:var(--bg-elevated); border:1px solid var(--border); border-radius:14px; padding:12px 14px; font-size:13.5px; line-height:1.4; }
+  .step-num{
+    flex:0 0 auto; width:24px; height:24px; border-radius:50%;
+    background:var(--accent); color:var(--accent-contrast);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:13px;
+  }
+  .tips-box{
+    width:100%; max-width:420px; background:var(--bg-elevated); border:1px solid var(--border);
+    border-radius:14px; padding:14px 16px; text-align:left; font-size:13px; color:var(--text-dim); margin-bottom:22px;
+  }
+  .tips-box strong{ color:var(--text); }
+  .tips-box ul{ margin:8px 0 0 0; padding-left:18px; }
+  .tips-box li{ margin-bottom:4px; }
+
+  button{
+    font-family:inherit; font-size:14.5px; font-weight:600; cursor:pointer;
+    border-radius:12px; padding:13px 20px; border:1px solid var(--border);
+    background:var(--bg-elevated); color:var(--text);
+    transition: transform .1s ease, background .15s ease, opacity .15s ease;
+  }
+  button:active{ transform:scale(0.97); }
+  button:disabled{ opacity:0.45; cursor:not-allowed; }
+  .primary-btn{
+    background:var(--accent); color:var(--accent-contrast); border-color:var(--accent);
+    width:100%; max-width:420px; font-size:15.5px; padding:15px 20px;
+  }
+  .secondary-btn{ background:transparent; color:var(--text-dim); border-color:transparent; text-decoration:underline; padding:10px; }
+  .shutter-btn{
+    background:var(--accent); color:var(--accent-contrast); border-color:var(--accent);
+    font-size:15.5px; padding:15px 22px; width:100%; max-width:340px; text-align:center;
+  }
+  .file-btn input[type=file]{ display:none; }
+  .upload-link{ color:var(--accent-strong); font-size:13.5px; margin:10px 0 16px 0; cursor:pointer; text-decoration:underline; }
+  .upload-link input[type=file]{ display:none; }
+
+  .capture-stage{ width:100%; display:flex; flex-direction:column; align-items:center; gap:14px; margin-bottom:10px; }
+  .video-frame{
+    position:relative; width:min(340px, 78vw); aspect-ratio:1/1;
+    background:#000; border-radius:18px; overflow:hidden; border:1px solid var(--border);
+  }
+  .video-frame video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .frame-guide{
+    position:absolute; inset:8%; border:2px dashed rgba(255,255,255,0.55); border-radius:50%;
+    pointer-events:none;
+  }
+
+  .progress-ring-wrap{ position:relative; width:72px; height:72px; margin-bottom:14px; }
+  .progress-ring-wrap svg{ display:block; }
+  #ring-fg{ transition: stroke-dashoffset .3s ease; }
+  .progress-count{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:17px;
+  }
+
+  .thumbs{
+    width:100%; max-width:460px; display:flex; gap:8px; overflow-x:auto;
+    padding:4px 2px 14px 2px; -webkit-overflow-scrolling:touch;
+  }
+  .thumb{ position:relative; flex:0 0 auto; width:64px; height:64px; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+  .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .thumb.flagged{ border-color:var(--warn); }
+  .thumb-warn{ position:absolute; bottom:2px; left:2px; font-size:12px; filter:drop-shadow(0 0 2px rgba(0,0,0,0.6)); }
+  .thumb-remove{
+    position:absolute; top:2px; right:2px; width:18px; height:18px; padding:0; line-height:16px;
+    border-radius:50%; background:rgba(0,0,0,0.55); color:#fff; border:none; font-size:13px;
+  }
+
+  .spinner{
+    width:44px; height:44px; border-radius:50%;
+    border:4px solid var(--border); border-top-color:var(--accent);
+    animation:spin 0.9s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .proc-bar{ width:min(320px,80vw); height:8px; border-radius:5px; background:var(--border); overflow:hidden; }
+  .proc-bar-fill{ height:100%; width:0%; background:var(--accent); transition:width .25s ease; }
+
+  #three-container{ position:absolute; inset:0; }
+  #three-container canvas{ display:block; touch-action:none; }
+
+  .hud{ position:fixed; z-index:10; pointer-events:none; }
+  .title-card{
+    top: max(16px, env(safe-area-inset-top)); left:16px;
+    background:var(--panel-bg); border:1px solid var(--border); backdrop-filter:blur(10px);
+    border-radius:14px; padding:12px 16px; max-width:min(320px,70vw); pointer-events:auto;
+  }
+  .title-card h1{ font-size:15px; margin:0 0 3px 0; }
+  .title-card p{ margin:0; font-size:12px; color:var(--text-dim); line-height:1.4; }
+  .controls-card{
+    bottom: max(16px, env(safe-area-inset-bottom)); left:16px;
+    display:flex; gap:8px; flex-wrap:wrap; pointer-events:auto; max-width:70vw;
+  }
+  .controls-card button{ font-size:12.5px; padding:9px 13px; background:var(--panel-bg); backdrop-filter:blur(10px); }
+  .controls-card button.active{ background:var(--accent); color:var(--accent-contrast); border-color:var(--accent); }
+  .export-card{ bottom: max(16px, env(safe-area-inset-bottom)); right:16px; pointer-events:auto; }
+  .export-card button{ padding:13px 18px; box-shadow:var(--shadow); }
+
+  #video{ display:none; }
+</style>
+</head>
+<body>
+
+<video id="video" playsinline autoplay muted></video>
+
+<div id="app">
+
+  <section id="screen-welcome" class="screen active">
+    <div class="content-scroll centered-content">
+      <div class="brand-icon">🧊</div>
+      <h1>3D Object Scanner</h1>
+      <p class="subtitle">Turn a real object into an interactive 3D model using nothing but your camera.</p>
+
+      <div class="steps-list">
+        <div class="step"><span class="step-num">1</span><div><strong>Capture.</strong> Take 16–24 photos circling the object (or slowly rotate the object in front of a fixed camera).</div></div>
+        <div class="step"><span class="step-num">2</span><div><strong>Reconstruct.</strong> The app carves a 3D shape from the outlines in your photos and colors it using the actual pixels you captured.</div></div>
+        <div class="step"><span class="step-num">3</span><div><strong>View &amp; export.</strong> Rotate it in 3D, then download a real .obj/.ply model file.</div></div>
+      </div>
+
+      <div class="tips-box">
+        <strong>For best results</strong>
+        <ul>
+          <li>Use a plain, contrasting background (a table or the floor works)</li>
+          <li>Keep the object centered and about the same distance in every shot</li>
+          <li>Space your photos evenly around a full 360° turn</li>
+          <li>Even, soft lighting — avoid strong shadows</li>
+        </ul>
+      </div>
+
+      <button id="btn-start" class="primary-btn">Start Scanning</button>
+    </div>
+  </section>
+
+  <section id="screen-bg" class="screen">
+    <div class="content-scroll">
+      <h2>Step 1 — Capture the empty background</h2>
+      <p class="muted">Photograph the empty surface before placing your object on it. This makes separating the object from the background far more accurate. Optional, but recommended.</p>
+
+      <div id="bg-live-ui" class="capture-stage">
+        <div class="video-frame"><div id="video-slot-bg"></div><div class="frame-guide"></div></div>
+        <button id="btn-bg-shutter" class="shutter-btn">📸 Capture Background</button>
+      </div>
+      <div id="bg-fallback-ui" class="capture-stage" style="display:none;">
+        <label class="shutter-btn file-btn">📸 Capture Background
+          <input type="file" accept="image/*" capture="environment" id="file-bg">
+        </label>
+      </div>
+
+      <button id="btn-bg-skip" class="secondary-btn">Skip this step</button>
+    </div>
+  </section>
+
+  <section id="screen-capture" class="screen">
+    <div class="content-scroll">
+      <h2>Step 2 — Capture the object</h2>
+      <p class="muted" id="capture-hint">Take at least 8 photos, spaced evenly around the object.</p>
+
+      <div class="progress-ring-wrap">
+        <svg viewBox="0 0 100 100" width="72" height="72">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="var(--border)" stroke-width="8"/>
+          <circle id="ring-fg" cx="50" cy="50" r="42" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/>
+        </svg>
+        <span class="progress-count" id="progress-count">0</span>
+      </div>
+
+      <div id="capture-live-ui" class="capture-stage">
+        <div class="video-frame"><div id="video-slot-capture"></div><div class="frame-guide"></div></div>
+        <button id="btn-shutter" class="shutter-btn">📸 Capture Photo</button>
+      </div>
+      <div id="capture-fallback-ui" class="capture-stage" style="display:none;">
+        <label class="shutter-btn file-btn">📸 Take Photo
+          <input type="file" accept="image/*" capture="environment" id="file-capture-single">
+        </label>
+      </div>
+
+      <label class="upload-link">or upload existing photos from your device
+        <input type="file" accept="image/*" multiple id="file-upload-multi">
+      </label>
+
+      <div id="thumbs" class="thumbs"></div>
+
+      <button id="btn-reconstruct" class="primary-btn" disabled>Reconstruct 3D Model</button>
+    </div>
+  </section>
+
+  <section id="screen-processing" class="screen">
+    <div class="centered-content">
+      <div class="spinner"></div>
+      <div class="proc-bar"><div id="proc-bar-fill" class="proc-bar-fill"></div></div>
+      <p id="proc-label" class="muted" style="align-self:center;">Starting…</p>
+      <button id="btn-proc-back" class="secondary-btn" style="display:none;">Back to capture</button>
+    </div>
+  </section>
+
+  <section id="screen-result" class="screen">
+    <div id="three-container"></div>
+    <div class="hud title-card">
+      <h1>🧊 Your 3D Scan</h1>
+      <p>Drag to rotate, scroll or pinch to zoom.</p>
+    </div>
+    <div class="hud controls-card">
+      <button id="btn-auto-rotate" class="active">Auto-rotate: On</button>
+      <button id="btn-reset-view">Reset view</button>
+      <button id="btn-rescan">Scan another</button>
+    </div>
+    <div class="hud export-card">
+      <button id="btn-export" class="primary-btn">⬇ Export model (.zip)</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.2/jszip.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+// ===================== Constants =====================
+var GRID = 44;
+var WORLD_HALF = 1.0;
+var VOXEL_SIZE = (WORLD_HALF*2)/GRID;
+var CAM_FOV = 46;
+var CAM_R = 3.0;
+var CAM_H = 0.55;
+var CAPTURE_SIZE = 440;
+var MASK_SIZE = 200;
+var MIN_VIEWS = 8;
+var TARGET_VIEWS = 16;
+var RING_CIRCUMFERENCE = 2*Math.PI*42;
+
+// ===================== State =====================
+var videoEl = document.getElementById('video');
+var mediaStream = null;
+var videoActive = false;
+
+var bgImageData = null;      // small ImageData reference for masking, or null
+var captures = [];           // { canvas, mask(Uint8Array), flagged(bool) }
+var finalGeometry = null;
+var downloadsCap = null;
+
+// ===================== Downloads capability (async) =====================
+(function initDownloads(){
+  try{
+    if (window.claude && typeof window.claude.use === 'function'){
+      window.claude.use('downloads').then(function(cap){ downloadsCap = cap; }).catch(function(){ downloadsCap = null; });
+    }
+  }catch(e){ downloadsCap = null; }
+})();
+
+// ===================== Screen navigation =====================
+function showScreen(name){
+  var screens = document.querySelectorAll('.screen');
+  for (var i=0;i<screens.length;i++){ screens[i].classList.remove('active'); }
+  document.getElementById('screen-'+name).classList.add('active');
+}
+
+function nextFrame(){ return new Promise(function(r){ requestAnimationFrame(r); }); }
+
+// ===================== Camera handling =====================
+function ensureCamera(){
+  if (videoActive && mediaStream) return Promise.resolve(true);
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+    return Promise.resolve(false);
+  }
+  return navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio:false })
+    .then(function(stream){
+      mediaStream = stream;
+      videoEl.srcObject = stream;
+      videoEl.muted = true;
+      videoEl.setAttribute('playsinline','');
+      return videoEl.play().then(function(){ videoActive = true; return true; });
+    })
+    .catch(function(err){
+      console.warn('Camera unavailable, using file-capture fallback:', err && err.message);
+      videoActive = false;
+      return false;
+    });
+}
+
+function stopVideoStream(){
+  if (mediaStream){
+    mediaStream.getTracks().forEach(function(t){ t.stop(); });
+    mediaStream = null;
+  }
+  videoActive = false;
+}
+
+function wireCameraUI(key, liveOk){
+  var liveUi = document.getElementById(key+'-live-ui');
+  var fallbackUi = document.getElementById(key+'-fallback-ui');
+  var slot = document.getElementById('video-slot-'+key);
+  if (liveOk){
+    liveUi.style.display = 'flex';
+    fallbackUi.style.display = 'none';
+    videoEl.style.display = 'block';
+    slot.appendChild(videoEl);
+  } else {
+    liveUi.style.display = 'none';
+    fallbackUi.style.display = 'flex';
+  }
+}
+
+// ===================== Frame capture helpers =====================
+function newCanvas(size){
+  var c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  return c;
+}
+function squareDrawFromSource(source, canvas){
+  var sw = source.videoWidth || source.naturalWidth || source.width;
+  var sh = source.videoHeight || source.naturalHeight || source.height;
+  var side = Math.min(sw, sh);
+  var sx = (sw-side)/2, sy = (sh-side)/2;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(source, sx, sy, side, side, 0, 0, canvas.width, canvas.height);
+}
+function getSmallImageData(sourceCanvas, size){
+  var small = newCanvas(size);
+  small.getContext('2d').drawImage(sourceCanvas, 0, 0, size, size);
+  return small.getContext('2d').getImageData(0, 0, size, size);
+}
+function loadImageFromFile(file){
+  return new Promise(function(resolve, reject){
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){ resolve(img); URL.revokeObjectURL(url); };
+    img.onerror = function(e){ URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
+  });
+}
+
+// ===================== Mask extraction =====================
+function computeMask(smallImageData, bgSmall){
+  var w = smallImageData.width, h = smallImageData.height;
+  var data = smallImageData.data;
+  var mask = new Uint8Array(w*h);
+  var THRESH = 42;
+  if (bgSmall){
+    var bd = bgSmall.data;
+    for (var i=0,p=0; i<data.length; i+=4, p++){
+      var dr=data[i]-bd[i], dg=data[i+1]-bd[i+1], db=data[i+2]-bd[i+2];
+      mask[p] = Math.sqrt(dr*dr+dg*dg+db*db) > THRESH ? 1 : 0;
+    }
+  } else {
+    var corners = [[0,0],[w-1,0],[0,h-1],[w-1,h-1]];
+    var cr=0,cg=0,cb=0;
+    for (var c=0;c<corners.length;c++){
+      var idx=(corners[c][1]*w+corners[c][0])*4;
+      cr+=data[idx]; cg+=data[idx+1]; cb+=data[idx+2];
+    }
+    cr/=4; cg/=4; cb/=4;
+    for (var j=0,p2=0; j<data.length; j+=4, p2++){
+      var ddr=data[j]-cr, ddg=data[j+1]-cg, ddb=data[j+2]-cb;
+      mask[p2] = Math.sqrt(ddr*ddr+ddg*ddg+ddb*ddb) > THRESH ? 1 : 0;
+    }
+  }
+  cleanMask(mask, w, h);
+  return mask;
+}
+
+function cleanMask(mask, w, h){
+  // Flood-fill background from the border; anything not reached that is
+  // still marked "background" is an enclosed hole -> promote to foreground.
+  var visited = new Uint8Array(w*h);
+  var stack = [];
+  function seed(x,y){
+    var idx=y*w+x;
+    if (!visited[idx] && mask[idx]===0){ visited[idx]=1; stack.push(idx); }
+  }
+  for (var x=0;x<w;x++){ seed(x,0); seed(x,h-1); }
+  for (var y=0;y<h;y++){ seed(0,y); seed(w-1,y); }
+  while (stack.length){
+    var idx = stack.pop();
+    var cx = idx % w, cy = (idx / w) | 0;
+    if (cx>0) seed(cx-1, cy);
+    if (cx<w-1) seed(cx+1, cy);
+    if (cy>0) seed(cx, cy-1);
+    if (cy<h-1) seed(cx, cy+1);
+  }
+  for (var i=0;i<mask.length;i++){
+    if (mask[i]===0 && !visited[i]) mask[i]=1;
+  }
+  // Keep only the largest connected foreground component (removes stray noise).
+  var visited2 = new Uint8Array(w*h);
+  var best = null, bestSize = 0;
+  for (var s=0; s<mask.length; s++){
+    if (mask[s]===1 && !visited2[s]){
+      var comp = [s]; visited2[s]=1;
+      var st = [s];
+      while (st.length){
+        var id2 = st.pop();
+        var cx2 = id2 % w, cy2 = (id2 / w) | 0;
+        var neigh = [[cx2-1,cy2],[cx2+1,cy2],[cx2,cy2-1],[cx2,cy2+1]];
+        for (var n=0;n<4;n++){
+          var nx=neigh[n][0], ny=neigh[n][1];
+          if (nx<0||ny<0||nx>=w||ny>=h) continue;
+          var nid = ny*w+nx;
+          if (!visited2[nid] && mask[nid]===1){ visited2[nid]=1; st.push(nid); comp.push(nid); }
+        }
+      }
+      if (comp.length > bestSize){ bestSize = comp.length; best = comp; }
+    }
+  }
+  var cleaned = new Uint8Array(w*h);
+  if (best){ for (var k=0;k<best.length;k++) cleaned[best[k]] = 1; }
+  for (var m=0;m<mask.length;m++) mask[m] = cleaned[m];
+}
+
+function countOnes(arr){
+  var n=0; for (var i=0;i<arr.length;i++) n+=arr[i];
+  return n;
+}
+
+// ===================== Capture management =====================
+function addCaptureFromCanvas(fullCanvas){
+  var small = getSmallImageData(fullCanvas, MASK_SIZE);
+  var mask = computeMask(small, bgImageData);
+  var frac = countOnes(mask) / (MASK_SIZE*MASK_SIZE);
+  var flagged = frac < 0.015 || frac > 0.88;
+  captures.push({ canvas: fullCanvas, mask: mask, flagged: flagged });
+  renderThumbs();
+  updateProgress();
+}
+
+function captureLiveFrame(){
+  var full = newCanvas(CAPTURE_SIZE);
+  squareDrawFromSource(videoEl, full);
+  return full;
+}
+
+function handleFileList(fileList){
+  var files = Array.prototype.slice.call(fileList);
+  var chain = Promise.resolve();
+  files.forEach(function(file){
+    chain = chain.then(function(){
+      return loadImageFromFile(file).then(function(img){
+        var full = newCanvas(CAPTURE_SIZE);
+        squareDrawFromSource(img, full);
+        addCaptureFromCanvas(full);
+      }).catch(function(err){ console.warn('Could not load image', err); });
+    });
+  });
+  return chain;
+}
+
+function renderThumbs(){
+  var wrap = document.getElementById('thumbs');
+  wrap.innerHTML = '';
+  captures.forEach(function(cap, idx){
+    var item = document.createElement('div');
+    item.className = 'thumb' + (cap.flagged ? ' flagged' : '');
+    var img = document.createElement('img');
+    img.src = cap.canvas.toDataURL('image/jpeg', 0.7);
+    item.appendChild(img);
+    if (cap.flagged){
+      var warn = document.createElement('span');
+      warn.className = 'thumb-warn';
+      warn.textContent = '⚠️';
+      warn.title = 'Outline looked unclear in this shot — consider removing it';
+      item.appendChild(warn);
+    }
+    var rm = document.createElement('button');
+    rm.className = 'thumb-remove';
+    rm.textContent = '×';
+    rm.addEventListener('click', function(){
+      captures.splice(idx, 1);
+      renderThumbs();
+      updateProgress();
+    });
+    item.appendChild(rm);
+    wrap.appendChild(item);
+  });
+}
+
+function updateProgress(){
+  var n = captures.length;
+  document.getElementById('progress-count').textContent = n;
+  var ratio = Math.min(1, n/TARGET_VIEWS);
+  document.getElementById('ring-fg').style.strokeDashoffset = (RING_CIRCUMFERENCE*(1-ratio)).toFixed(2);
+  var btn = document.getElementById('btn-reconstruct');
+  btn.disabled = n < MIN_VIEWS;
+  var hint = document.getElementById('capture-hint');
+  if (n < MIN_VIEWS){
+    var remaining = MIN_VIEWS - n;
+    hint.textContent = 'Take at least ' + remaining + ' more photo' + (remaining===1?'':'s') + ' (aim for ' + TARGET_VIEWS + '+ total, spaced evenly around the object).';
+  } else {
+    hint.textContent = n + ' photos captured. Add more for finer detail, or reconstruct now.';
+  }
+}
+
+// ===================== Voxel carving =====================
+function buildTurntableCameras(n){
+  var cams = [];
+  for (var i=0;i<n;i++){
+    var theta = (i/n) * Math.PI * 2;
+    var cam = new THREE.PerspectiveCamera(CAM_FOV, 1, 0.1, 100);
+    cam.position.set(Math.sin(theta)*CAM_R, CAM_H, Math.cos(theta)*CAM_R);
+    cam.up.set(0,1,0);
+    cam.lookAt(0,0,0);
+    cam.updateMatrixWorld(true);
+    cam.updateProjectionMatrix();
+    cams.push(cam);
+  }
+  return cams;
+}
+
+function carveStep(occ, mask, maskSize, camera){
+  var v = new THREE.Vector3();
+  var idx = 0;
+  for (var iz=0; iz<GRID; iz++){
+    var wz = -WORLD_HALF + (iz+0.5)*VOXEL_SIZE;
+    for (var iy=0; iy<GRID; iy++){
+      var wy = -WORLD_HALF + (iy+0.5)*VOXEL_SIZE;
+      for (var ix=0; ix<GRID; ix++, idx++){
+        if (!occ[idx]) continue;
+        var wx = -WORLD_HALF + (ix+0.5)*VOXEL_SIZE;
+        v.set(wx, wy, wz).project(camera);
+        if (v.x<-1||v.x>1||v.y<-1||v.y>1||v.z<-1||v.z>1) continue;
+        var px = (v.x*0.5+0.5) * maskSize | 0;
+        var py = ((1-(v.y*0.5+0.5)) * maskSize) | 0;
+        if (px<0||py<0||px>=maskSize||py>=maskSize) continue;
+        if (mask[py*maskSize+px] === 0){ occ[idx] = 0; }
+      }
+    }
+  }
+}
+
+// ===================== Meshing (culled voxel faces) =====================
+var FACE_DIRS = [
+  { n:[1,0,0],  corners:[[1,0,0],[1,1,0],[1,1,1],[1,0,1]] },
+  { n:[-1,0,0], corners:[[0,0,1],[0,1,1],[0,1,0],[0,0,0]] },
+  { n:[0,1,0],  corners:[[0,1,0],[0,1,1],[1,1,1],[1,1,0]] },
+  { n:[0,-1,0], corners:[[0,0,1],[0,0,0],[1,0,0],[1,0,1]] },
+  { n:[0,0,1],  corners:[[1,0,1],[1,1,1],[0,1,1],[0,0,1]] },
+  { n:[0,0,-1], corners:[[0,0,0],[0,1,0],[1,1,0],[1,0,0]] }
+];
+
+function cornerWorld(ix, iy, iz){
+  return [ -WORLD_HALF + ix*VOXEL_SIZE, -WORLD_HALF + iy*VOXEL_SIZE, -WORLD_HALF + iz*VOXEL_SIZE ];
+}
+
+function occAt(occ, ix, iy, iz){
+  if (ix<0||iy<0||iz<0||ix>=GRID||iy>=GRID||iz>=GRID) return 0;
+  return occ[(iz*GRID+iy)*GRID+ix];
+}
+
+function buildMeshFromOcc(occ){
+  var positions = [];
+  var idx = 0;
+  for (var iz=0; iz<GRID; iz++){
+    for (var iy=0; iy<GRID; iy++){
+      for (var ix=0; ix<GRID; ix++, idx++){
+        if (!occ[idx]) continue;
+        for (var d=0; d<6; d++){
+          var dir = FACE_DIRS[d];
+          if (occAt(occ, ix+dir.n[0], iy+dir.n[1], iz+dir.n[2])) continue;
+          var q0 = cornerWorld(ix+dir.corners[0][0], iy+dir.corners[0][1], iz+dir.corners[0][2]);
+          var q1 = cornerWorld(ix+dir.corners[1][0], iy+dir.corners[1][1], iz+dir.corners[1][2]);
+          var q2 = cornerWorld(ix+dir.corners[2][0], iy+dir.corners[2][1], iz+dir.corners[2][2]);
+          var q3 = cornerWorld(ix+dir.corners[3][0], iy+dir.corners[3][1], iz+dir.corners[3][2]);
+          positions.push(q0[0],q0[1],q0[2], q1[0],q1[1],q1[2], q2[0],q2[1],q2[2]);
+          positions.push(q0[0],q0[1],q0[2], q2[0],q2[1],q2[2], q3[0],q3[1],q3[2]);
+        }
+      }
+    }
+  }
+  return positions;
+}
+
+// ===================== Welding & smoothing =====================
+function weldVertices(positions){
+  var map = new Map();
+  var weldedPositions = [];
+  var indices = new Array(positions.length/3);
+  for (var i=0, vi=0; i<positions.length; i+=3, vi++){
+    var x=positions[i], y=positions[i+1], z=positions[i+2];
+    var key = Math.round(x*100000)+'_'+Math.round(y*100000)+'_'+Math.round(z*100000);
+    var idx = map.get(key);
+    if (idx === undefined){
+      idx = weldedPositions.length/3;
+      weldedPositions.push(x,y,z);
+      map.set(key, idx);
+    }
+    indices[vi] = idx;
+  }
+  return { weldedPositions: weldedPositions, indices: indices };
+}
+
+function buildAdjacency(indices, vertexCount){
+  var adjSets = new Array(vertexCount);
+  for (var i=0;i<vertexCount;i++) adjSets[i] = new Set();
+  for (var t=0; t<indices.length; t+=3){
+    var a=indices[t], b=indices[t+1], c=indices[t+2];
+    adjSets[a].add(b); adjSets[a].add(c);
+    adjSets[b].add(a); adjSets[b].add(c);
+    adjSets[c].add(a); adjSets[c].add(b);
+  }
+  var adjArr = new Array(vertexCount);
+  for (var j=0;j<vertexCount;j++) adjArr[j] = Array.from(adjSets[j]);
+  return adjArr;
+}
+
+function smoothPositions(weldedPositions, adjacency, iterations, factor){
+  var pos = weldedPositions.slice();
+  var n = pos.length/3;
+  for (var it=0; it<iterations; it++){
+    var newPos = pos.slice();
+    for (var v=0; v<n; v++){
+      var neighbors = adjacency[v];
+      if (!neighbors.length) continue;
+      var sx=0, sy=0, sz=0;
+      for (var k=0;k<neighbors.length;k++){
+        var nb = neighbors[k];
+        sx += pos[nb*3]; sy += pos[nb*3+1]; sz += pos[nb*3+2];
+      }
+      sx/=neighbors.length; sy/=neighbors.length; sz/=neighbors.length;
+      newPos[v*3]   = pos[v*3]*(1-factor)   + sx*factor;
+      newPos[v*3+1] = pos[v*3+1]*(1-factor) + sy*factor;
+      newPos[v*3+2] = pos[v*3+2]*(1-factor) + sz*factor;
+    }
+    pos = newPos;
+  }
+  return pos;
+}
+
+// ===================== Vertex coloring from photos =====================
+function colorVertices(geometry, caps, cams){
+  var posAttr = geometry.attributes.position;
+  var normAttr = geometry.attributes.normal;
+  var n = caps.length;
+  var viewDirs = cams.map(function(c){ return c.position.clone().normalize(); });
+  var imageDatas = caps.map(function(cap){
+    var ctx = cap.canvas.getContext('2d');
+    return ctx.getImageData(0, 0, cap.canvas.width, cap.canvas.height);
+  });
+  var colors = new Float32Array(posAttr.count*3);
+  var v = new THREE.Vector3(), nrm = new THREE.Vector3();
+  for (var i=0;i<posAttr.count;i++){
+    v.fromBufferAttribute(posAttr, i);
+    nrm.fromBufferAttribute(normAttr, i);
+    var bestVi = -1, bestDot = -2;
+    for (var vi=0; vi<n; vi++){
+      var dot = nrm.dot(viewDirs[vi]);
+      if (dot > bestDot){ bestDot = dot; bestVi = vi; }
+    }
+    var r=0.6, g=0.6, b=0.62;
+    if (bestVi >= 0){
+      var proj = v.clone().project(cams[bestVi]);
+      if (proj.x>=-1 && proj.x<=1 && proj.y>=-1 && proj.y<=1){
+        var id = imageDatas[bestVi];
+        var px = Math.min(id.width-1, Math.max(0, Math.floor((proj.x*0.5+0.5)*id.width)));
+        var py = Math.min(id.height-1, Math.max(0, Math.floor((1-(proj.y*0.5+0.5))*id.height)));
+        var o = (py*id.width+px)*4;
+        r = id.data[o]/255; g = id.data[o+1]/255; b = id.data[o+2]/255;
+      }
+    }
+    colors[i*3]=r; colors[i*3+1]=g; colors[i*3+2]=b;
+  }
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+}
+
+// ===================== Processing UI helpers =====================
+function setProcessing(ratio, label){
+  document.getElementById('proc-bar-fill').style.width = (ratio*100).toFixed(0)+'%';
+  document.getElementById('proc-label').textContent = label;
+}
+function showReconstructionError(){
+  setProcessing(0, "Reconstruction failed — the outlines didn't overlap into a solid shape. Try a plainer background, more even lighting, and keep the object centered in every shot.");
+  document.getElementById('btn-proc-back').style.display = 'inline-block';
+}
+
+// ===================== Reconstruction pipeline =====================
+function runReconstruction(){
+  showScreen('processing');
+  document.getElementById('btn-proc-back').style.display = 'none';
+  setProcessing(0, 'Preparing…');
+
+  nextFrame().then(function(){
+    var n = captures.length;
+    var occ = new Uint8Array(GRID*GRID*GRID).fill(1);
+    var cams = buildTurntableCameras(n);
+
+    function carveLoop(i){
+      if (i >= n) return afterCarve(occ, cams);
+      carveStep(occ, captures[i].mask, MASK_SIZE, cams[i]);
+      setProcessing(((i+1)/n) * 0.62, 'Carving shape from photo ' + (i+1) + ' of ' + n + '…');
+      return nextFrame().then(function(){ return carveLoop(i+1); });
+    }
+    return carveLoop(0);
+  }).catch(function(err){
+    console.error(err);
+    showReconstructionError();
+  });
+}
+
+function afterCarve(occ, cams){
+  var solid = countOnes(occ);
+  if (solid < 30){
+    showReconstructionError();
+    return Promise.resolve();
+  }
+  setProcessing(0.68, 'Building surface mesh…');
+  return nextFrame().then(function(){
+    var positions = buildMeshFromOcc(occ);
+    if (positions.length < 9){
+      showReconstructionError();
+      return;
+    }
+    setProcessing(0.78, 'Welding vertices…');
+    return nextFrame().then(function(){
+      var welded = weldVertices(positions);
+      setProcessing(0.85, 'Smoothing surface…');
+      return nextFrame().then(function(){
+        var adjacency = buildAdjacency(welded.indices, welded.weldedPositions.length/3);
+        var smoothed = smoothPositions(welded.weldedPositions, adjacency, 5, 0.5);
+        setProcessing(0.92, 'Applying color from your photos…');
+        return nextFrame().then(function(){
+          var geometry = new THREE.BufferGeometry();
+          geometry.setAttribute('position', new THREE.Float32BufferAttribute(smoothed, 3));
+          geometry.setIndex(welded.indices);
+          geometry.computeVertexNormals();
+          colorVertices(geometry, captures, cams);
+          setProcessing(1, 'Done!');
+          finalGeometry = geometry;
+          return nextFrame().then(function(){
+            stopVideoStream();
+            buildResultScene(geometry);
+            showScreen('result');
+          });
+        });
+      });
+    });
+  });
+}
+
+// ===================== Result viewer (Three.js) =====================
+var resultScene, resultCamera, resultRenderer, resultMesh;
+var rSpherical, rTarget;
+var rAutoRotate = true;
+var rDragging = false, rLastX=0, rLastY=0;
+var rResizeHandler = null;
+var rLoopStarted = false;
+
+function buildResultScene(geometry){
+  var container = document.getElementById('three-container');
+  container.innerHTML = '';
+
+  resultScene = new THREE.Scene();
+  resultCamera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.05, 100);
+  resultRenderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  resultRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  resultRenderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(resultRenderer.domElement);
+
+  resultScene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  var dl = new THREE.DirectionalLight(0xffffff, 1.0);
+  dl.position.set(2.5, 4, 3);
+  resultScene.add(dl);
+  var dl2 = new THREE.DirectionalLight(0x88aaff, 0.35);
+  dl2.position.set(-3, -1, -2);
+  resultScene.add(dl2);
+
+  var material = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.85, metalness:0.05 });
+  resultMesh = new THREE.Mesh(geometry, material);
+  resultScene.add(resultMesh);
+
+  var grid = new THREE.GridHelper(3.4, 22, 0x2dd4bf, 0x64748b);
+  grid.position.y = -WORLD_HALF - 0.01;
+  resultScene.add(grid);
+
+  rTarget = new THREE.Vector3(0,0,0);
+  rSpherical = new THREE.Spherical();
+  rSpherical.setFromVector3(new THREE.Vector3(2.2, 1.7, 2.8));
+  updateResultCamera();
+
+  attachResultControls(resultRenderer.domElement);
+
+  if (rResizeHandler) window.removeEventListener('resize', rResizeHandler);
+  rResizeHandler = function(){
+    var c = document.getElementById('three-container');
+    if (!c) return;
+    resultCamera.aspect = c.clientWidth / c.clientHeight;
+    resultCamera.updateProjectionMatrix();
+    resultRenderer.setSize(c.clientWidth, c.clientHeight);
+  };
+  window.addEventListener('resize', rResizeHandler);
+
+  rAutoRotate = true;
+  var btn = document.getElementById('btn-auto-rotate');
+  btn.textContent = 'Auto-rotate: On';
+  btn.classList.add('active');
+
+  if (!rLoopStarted){ rLoopStarted = true; animateResult(); }
+}
+
+function updateResultCamera(){
+  var p = new THREE.Vector3().setFromSpherical(rSpherical).add(rTarget);
+  resultCamera.position.copy(p);
+  resultCamera.lookAt(rTarget);
+}
+
+function attachResultControls(dom){
+  function onDown(x,y){ rDragging = true; rLastX = x; rLastY = y; }
+  function onMove(x,y){
+    if (!rDragging) return;
+    var dx = x - rLastX, dy = y - rLastY;
+    rLastX = x; rLastY = y;
+    rSpherical.theta -= dx*0.007;
+    rSpherical.phi -= dy*0.007;
+    rSpherical.phi = Math.max(0.2, Math.min(Math.PI-0.2, rSpherical.phi));
+    updateResultCamera();
+  }
+  function onUp(){ rDragging = false; }
+
+  dom.addEventListener('mousedown', function(e){ onDown(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', function(e){ onMove(e.clientX, e.clientY); });
+  window.addEventListener('mouseup', onUp);
+
+  dom.addEventListener('touchstart', function(e){
+    if (e.touches.length===1) onDown(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive:true});
+  dom.addEventListener('touchmove', function(e){
+    if (e.touches.length===1) onMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive:true});
+  dom.addEventListener('touchend', onUp);
+
+  dom.addEventListener('wheel', function(e){
+    e.preventDefault();
+    rSpherical.radius += e.deltaY*0.003;
+    rSpherical.radius = Math.max(1.0, Math.min(12, rSpherical.radius));
+    updateResultCamera();
+  }, {passive:false});
+
+  var lastPinch = null;
+  dom.addEventListener('touchmove', function(e){
+    if (e.touches.length===2){
+      var ddx = e.touches[0].clientX - e.touches[1].clientX;
+      var ddy = e.touches[0].clientY - e.touches[1].clientY;
+      var dist = Math.sqrt(ddx*ddx+ddy*ddy);
+      if (lastPinch!=null){
+        rSpherical.radius += (lastPinch-dist)*0.01;
+        rSpherical.radius = Math.max(1.0, Math.min(12, rSpherical.radius));
+        updateResultCamera();
+      }
+      lastPinch = dist;
+    }
+  }, {passive:true});
+  dom.addEventListener('touchend', function(){ lastPinch = null; });
+}
+
+function animateResult(){
+  requestAnimationFrame(animateResult);
+  if (!resultRenderer) return;
+  if (rAutoRotate && !rDragging){
+    rSpherical.theta += 0.0035;
+    updateResultCamera();
+  }
+  resultRenderer.render(resultScene, resultCamera);
+}
+
+// ===================== Export =====================
+function buildOBJ(positions, indices, normals){
+  var out = '# 3D scan exported from camera-based 3D Object Scanner\n';
+  var vertCount = positions.length/3;
+  var i;
+  for (i=0;i<vertCount;i++){
+    out += 'v ' + positions[i*3].toFixed(5) + ' ' + positions[i*3+1].toFixed(5) + ' ' + positions[i*3+2].toFixed(5) + '\n';
+  }
+  for (i=0;i<vertCount;i++){
+    out += 'vn ' + normals[i*3].toFixed(5) + ' ' + normals[i*3+1].toFixed(5) + ' ' + normals[i*3+2].toFixed(5) + '\n';
+  }
+  for (i=0;i<indices.length;i+=3){
+    var a=indices[i]+1, b=indices[i+1]+1, c=indices[i+2]+1;
+    out += 'f ' + a+'//'+a + ' ' + b+'//'+b + ' ' + c+'//'+c + '\n';
+  }
+  return out;
+}
+function buildPLY(positions, indices, colors){
+  var vertCount = positions.length/3;
+  var faceCount = indices.length/3;
+  var header = 'ply\nformat ascii 1.0\nelement vertex '+vertCount+'\nproperty float x\nproperty float y\nproperty float z\n' +
+    'property uchar red\nproperty uchar green\nproperty uchar blue\nelement face '+faceCount+'\n' +
+    'property list uchar int vertex_indices\nend_header\n';
+  var body = '';
+  var i;
+  for (i=0;i<vertCount;i++){
+    var r = Math.round(Math.min(1,Math.max(0,colors[i*3]))*255);
+    var g = Math.round(Math.min(1,Math.max(0,colors[i*3+1]))*255);
+    var b = Math.round(Math.min(1,Math.max(0,colors[i*3+2]))*255);
+    body += positions[i*3].toFixed(5)+' '+positions[i*3+1].toFixed(5)+' '+positions[i*3+2].toFixed(5)+' '+r+' '+g+' '+b+'\n';
+  }
+  for (i=0;i<indices.length;i+=3){
+    body += '3 '+indices[i]+' '+indices[i+1]+' '+indices[i+2]+'\n';
+  }
+  return header+body;
+}
+function buildReadme(){
+  return '3D Scan Export\n================\n\n' +
+    'This model was reconstructed from photos taken with a phone or webcam camera,\n' +
+    'using a silhouette-based ("visual hull") technique rather than laser or LiDAR scanning.\n\n' +
+    'Files included:\n' +
+    '- scan.obj  -- geometry only (widely compatible: Blender, MeshLab, most 3D software)\n' +
+    '- scan.ply  -- geometry WITH vertex colors sampled from your photos\n\n' +
+    'Notes:\n' +
+    '- The shape is an approximation (a visual hull) derived from the outline of the\n' +
+    '  object in each photo, not a precise laser/LiDAR scan -- fine surface detail and\n' +
+    '  concavities facing away from every photo may be simplified or missing.\n' +
+    '- If edges look rough, rescanning with more photos (18-24) spaced evenly around\n' +
+    '  the object, even lighting, and a plain background usually helps.\n';
+}
+
+function saveFile(filename, blob){
+  if (downloadsCap){
+    return downloadsCap.save({ filename:filename, data:blob }).catch(function(e){
+      if (e && e.code === 'declined') return;
+      console.warn('downloads capability failed, falling back to anchor download', e);
+      anchorDownload(filename, blob);
+    });
+  }
+  anchorDownload(filename, blob);
+  return Promise.resolve();
+}
+function anchorDownload(filename, blob){
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+}
+
+function exportModel(){
+  if (!finalGeometry) return;
+  var btn = document.getElementById('btn-export');
+  var original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Packaging…';
+
+  var positions = finalGeometry.attributes.position.array;
+  var normals = finalGeometry.attributes.normal.array;
+  var colors = finalGeometry.attributes.color.array;
+  var indices = finalGeometry.index.array;
+
+  var objText = buildOBJ(positions, indices, normals);
+  var plyText = buildPLY(positions, indices, colors);
+  var readme = buildReadme();
+
+  var zip = new JSZip();
+  zip.file('scan.obj', objText);
+  zip.file('scan.ply', plyText);
+  zip.file('README.txt', readme);
+
+  zip.generateAsync({ type:'blob' }).then(function(blob){
+    return saveFile('my-3d-scan.zip', blob);
+  }).then(function(){
+    btn.textContent = 'Saved!';
+  }).catch(function(err){
+    console.error(err);
+    btn.textContent = 'Export failed — tap to retry';
+  }).finally(function(){
+    setTimeout(function(){ btn.disabled=false; btn.textContent=original; }, 2200);
+  });
+}
+
+// ===================== Reset for a new scan =====================
+function resetForNewScan(){
+  bgImageData = null;
+  captures = [];
+  finalGeometry = null;
+  renderThumbs();
+  updateProgress();
+  document.getElementById('file-bg').value = '';
+  document.getElementById('file-capture-single').value = '';
+  document.getElementById('file-upload-multi').value = '';
+  showScreen('bg');
+  ensureCamera().then(function(ok){ wireCameraUI('bg', ok); });
+}
+
+// ===================== Event wiring =====================
+document.getElementById('btn-start').addEventListener('click', function(){
+  showScreen('bg');
+  ensureCamera().then(function(ok){ wireCameraUI('bg', ok); });
+});
+
+document.getElementById('btn-bg-shutter').addEventListener('click', function(){
+  var full = captureLiveFrame();
+  bgImageData = getSmallImageData(full, MASK_SIZE);
+  showScreen('capture');
+  ensureCamera().then(function(ok){ wireCameraUI('capture', ok); updateProgress(); renderThumbs(); });
+});
+document.getElementById('file-bg').addEventListener('change', function(e){
+  var file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  loadImageFromFile(file).then(function(img){
+    var full = newCanvas(CAPTURE_SIZE);
+    squareDrawFromSource(img, full);
+    bgImageData = getSmallImageData(full, MASK_SIZE);
+    showScreen('capture');
+    ensureCamera().then(function(ok){ wireCameraUI('capture', ok); updateProgress(); renderThumbs(); });
+  });
+});
+document.getElementById('btn-bg-skip').addEventListener('click', function(){
+  bgImageData = null;
+  showScreen('capture');
+  ensureCamera().then(function(ok){ wireCameraUI('capture', ok); updateProgress(); renderThumbs(); });
+});
+
+document.getElementById('btn-shutter').addEventListener('click', function(){
+  addCaptureFromCanvas(captureLiveFrame());
+});
+document.getElementById('file-capture-single').addEventListener('change', function(e){
+  var file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  loadImageFromFile(file).then(function(img){
+    var full = newCanvas(CAPTURE_SIZE);
+    squareDrawFromSource(img, full);
+    addCaptureFromCanvas(full);
+  });
+});
+document.getElementById('file-upload-multi').addEventListener('change', function(e){
+  var files = e.target.files;
+  handleFileList(files).then(function(){ e.target.value = ''; });
+});
+
+document.getElementById('btn-reconstruct').addEventListener('click', runReconstruction);
+document.getElementById('btn-proc-back').addEventListener('click', function(){ showScreen('capture'); });
+
+document.getElementById('btn-auto-rotate').addEventListener('click', function(e){
+  rAutoRotate = !rAutoRotate;
+  e.target.textContent = 'Auto-rotate: ' + (rAutoRotate ? 'On' : 'Off');
+  e.target.classList.toggle('active', rAutoRotate);
+});
+document.getElementById('btn-reset-view').addEventListener('click', function(){
+  rSpherical.setFromVector3(new THREE.Vector3(2.2, 1.7, 2.8));
+  updateResultCamera();
+});
+document.getElementById('btn-export').addEventListener('click', exportModel);
+document.getElementById('btn-rescan').addEventListener('click', resetForNewScan);
+
+})();
+</script>
+</body>
+</html>
